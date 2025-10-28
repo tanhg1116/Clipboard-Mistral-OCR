@@ -1,0 +1,38 @@
+# Environments & secrets
+.env
+.env.local
+.env.*.local
+.venv/
+venv/
+
+# Python cache & artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.Python
+*.egg-info/
+*.egg
+build/
+dist/
+
+# Streamlit & app runtime files
+.streamlit/secrets.toml
+logs/
+
+# IDE/editor noise
+.vscode/
+.idea/
+*.code-workspace
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Test & coverage outputs
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
