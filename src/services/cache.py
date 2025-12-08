@@ -8,12 +8,12 @@ _MEMO_FALLBACK: Dict[str, Dict[Tuple[str, str, int], str]] = {"ocr": {}}
 
 # Cache pure data results. Key by composite key to isolate per session/file/page.
 
-
+# decorator (placeholder)
 @st.cache_data(show_spinner=False)
 def get_cached_markdown(key: Tuple[str, str, int]) -> str | None:
     return None
 
-
+# Store markdown in st.session_state["_memo_cache"] dict
 def set_cached_markdown(key: Tuple[str, str, int], value: str) -> None:
     # st.cache_data cannot be set directly; emulate via a dict in session_state or fallback to process dict
     try:
@@ -24,6 +24,7 @@ def set_cached_markdown(key: Tuple[str, str, int], value: str) -> None:
         _MEMO_FALLBACK.setdefault("ocr", {})[key] = value
 
 
+# Retrieve cached markdown: Check session_state first, then fallback dict
 def read_memo_markdown(key: Tuple[str, str, int]) -> str | None:
     try:
         cache: Dict[str, Dict[Tuple[str, str, int], str]] = st.session_state.setdefault("_memo_cache", {})  # type: ignore
@@ -32,6 +33,7 @@ def read_memo_markdown(key: Tuple[str, str, int]) -> str | None:
         return _MEMO_FALLBACK.get("ocr", {}).get(key)
 
 
+# Delete cache entry (used when Re-OCR clicked)
 def invalidate_markdown(key: Tuple[str, str, int]) -> None:
     try:
         cache: Dict[str, Dict[Tuple[str, str, int], str]] = st.session_state.setdefault("_memo_cache", {})  # type: ignore
