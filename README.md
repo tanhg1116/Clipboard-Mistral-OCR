@@ -5,7 +5,7 @@ Streamlit app for OCR using Mistral AI. Convert PDFs and images to markdown with
 ## Features
 
 - **High-accuracy OCR**: Handles messy fonts, tables, math equations (LaTeX), and code blocks
-- **AI-powered filenames**: OpenAI GPT-4o-mini generates descriptive names from content
+- **AI-powered filenames**: OpenAI GPT-5-nano generates descriptive names from content
 - **Multiple exports**: PDF, HTML (with LaTeX), or Markdown with page range selection
 - **Export history**: View, download, or batch delete exports per session
 - **Session management**: Work on multiple documents with independent caches
@@ -28,7 +28,7 @@ streamlit run app.py
 
 **API Keys:**
 - [Mistral](https://admin.mistral.ai/organization/api-keys) - Required for OCR
-- [OpenAI](https://platform.openai.com/api-keys) - Optional for smart filenames
+- [OpenAI](https://platform.openai.com/api-keys) - Optional for auto file rename.
 
 ## Export Formats
 
@@ -57,7 +57,8 @@ Contributions welcome! Please:
 
 **PDF export without LaTeX support?** Export as HTML, then Print → Save as PDF in browser.
 
-**Missing API key?** Check `.env` has `MISTRAL_API_KEY=...` (OpenAI key optional)
+**Missing API key?** Check `.env` has `MISTRAL_API_KEY=...` 
+`OPENAI_API_KEY=...` (Optional)
 
 **Clipboard paste not working?** `pip install Pillow --upgrade`
 
