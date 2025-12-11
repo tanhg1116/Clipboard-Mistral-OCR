@@ -2,6 +2,9 @@
 
 Streamlit app for OCR using Mistral AI. Convert PDFs and images to markdown with LaTeX support, smart exports, and session management.
 
+## Example
+![alt text](Example.jpg)
+
 ## Features
 
 - **High-accuracy OCR**: Handles messy fonts, tables, math equations (LaTeX), and code blocks
@@ -57,7 +60,7 @@ Contributions welcome! Please:
 
 **PDF export without LaTeX support?** Export as HTML, then Print → Save as PDF in browser.
 
-**Missing API key?** Check `.env` has `MISTRAL_API_KEY=...` 
+**Missing API key?** Check `.env` has `MISTRAL_API_KEY=...`  
 `OPENAI_API_KEY=...` (Optional)
 
 **Clipboard paste not working?** `pip install Pillow --upgrade`
@@ -65,3 +68,4 @@ Contributions welcome! Please:
 ## License
 
 MIT License
+
