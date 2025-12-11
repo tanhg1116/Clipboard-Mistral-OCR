@@ -113,6 +113,7 @@ def render_main_panes(session: Session, active_session_id: str = None, executor 
                 with c1:
                     if st.button("◀", disabled=active_file.current_page <= 1, help="Previous", use_container_width=True):
                         active_file.current_page = max(1, active_file.current_page - 1)
+                        st.rerun()
                 with c2:
                     page = st.number_input(
                         "Page",
@@ -126,9 +127,11 @@ def render_main_panes(session: Session, active_session_id: str = None, executor 
                     )
                     if page != active_file.current_page:
                         active_file.current_page = int(page)
+                        st.rerun()
                 with c3:
                     if st.button("▶", disabled=active_file.current_page >= (active_file.num_pages or 1), help="Next", use_container_width=True):
                         active_file.current_page = active_file.current_page + 1
+                        st.rerun()
             else:
                 st.image(active_file.bytes, use_container_width=True)
         
@@ -216,18 +219,28 @@ def render_main_panes(session: Session, active_session_id: str = None, executor 
                 name = f"clipboard-{time.strftime('%Y%m%d-%H%M%S')}.png"
                 _load_session_file(session, name=name, content=clipboard_bytes, is_pdf=False, force_rerun=True)
 
+    # Calculate current file/page info AFTER left column navigation has been processed
+    if not active_file:
+        with col_rendered:
+            st.markdown("### 📝 Rendered Markdown")
+            st.info("Upload a document to begin.")
+        with col_raw:
+            st.markdown("### ✏️ Raw Markdown Editor")
+            st.info("Upload a document to begin.")
+        return
+    
+    file_id = active_file.file_id
+    current_page = active_file.current_page if active_file.is_pdf else 1
+    key = (session.id, file_id, current_page)
+    raw_key = f"raw_{session.id}_{file_id}_{current_page}"
+
     # Column 2: Rendered Markdown preview
     with col_rendered:
-        st.markdown("### 📝 Rendered Markdown")
-        
-        if not active_file:
-            st.info("Upload a document to begin.")
-            return
-
-        file_id = active_file.file_id
-        current_page = active_file.current_page if active_file.is_pdf else 1
-        key = (session.id, file_id, current_page)
-        raw_key = f"raw_{session.id}_{file_id}_{current_page}"
+        # Display page number info for PDFs
+        if active_file.is_pdf:
+            st.markdown(f"### 📝 Rendered Markdown - Page {current_page} of {active_file.num_pages}")
+        else:
+            st.markdown("### 📝 Rendered Markdown")
 
         # OCR job state
         ocr_jobs = st.session_state.setdefault("ocr_jobs", {})
@@ -358,12 +371,22 @@ def render_main_panes(session: Session, active_session_id: str = None, executor 
                     st.rerun()
                 elif job and job.status == "done":
                     # Show download button
-                    st.success("Export complete!")
+                    st.success("✅ Export complete!")
                     file_name = job.output_name
                     if job.output_bytes is not None:
-                        mime = "application/pdf" if job.format == "pdf" else "text/markdown"
+                        if job.format == "pdf":
+                            mime = "application/pdf"
+                        elif job.format == "html":
+                            mime = "text/html"
+                        else:
+                            mime = "text/markdown"
+                        
+                        # Show PDF conversion instructions for HTML exports
+                        if job.format == "html":
+                            st.info("💡 **To convert HTML to PDF:** Open the downloaded HTML file in any browser → Print → Save as PDF")
+                        
                         st.download_button(
-                            label=f"Download {file_name}",
+                            label=f"""📥 Download "{file_name}".""",
                             data=job.output_bytes,
                             file_name=file_name,
                             mime=mime,
@@ -371,6 +394,9 @@ def render_main_panes(session: Session, active_session_id: str = None, executor 
                             key=f"dl_modal_{active_session_id}",
                         )
                     if st.button("Close", key=f"close_export_done_{active_session_id}", use_container_width=True):
+                        # Clear the job status and close dialog
+                        from src.services.exporter import clear_export_job
+                        clear_export_job(active_session_id)
                         st.session_state[f"show_export_dialog_{active_session_id}"] = False
                         st.rerun()
                 else:
@@ -384,15 +410,24 @@ def render_main_panes(session: Session, active_session_id: str = None, executor 
                     
                     export_format = st.radio(
                         "Export format",
-                        options=["PDF", "Markdown"],
+                        options=["PDF", "HTML", "Markdown"],
                         key=f"export_format_modal_{active_session_id}",
                         horizontal=True
                     )
                     
+                    # Warning for PDF export with LaTeX equations
+                    if export_format == "PDF":
+                        st.warning("⚠️ **Note:** PDF export does not support LaTeX equations. If your content contains equations, export as HTML or Markdown instead. For HTML, you can then use Print → Save as PDF in your browser.")
+                    
                     col1, col2 = st.columns(2)
                     with col1:
                         if st.button("Start Export", key=f"start_export_modal_{active_session_id}", use_container_width=True):
-                            fmt = "pdf" if export_format == "PDF" else "md"
+                            if export_format == "PDF":
+                                fmt = "pdf"
+                            elif export_format == "HTML":
+                                fmt = "html"
+                            else:
+                                fmt = "md"
                             try:
                                 start_export_job(executor, active_session_id, page_range, fmt)
                                 st.toast(f"Started {fmt.upper()} export")
@@ -477,50 +512,6 @@ def render_main_panes(session: Session, active_session_id: str = None, executor 
                 elif job and job.get("status") == "error":
                     st.error(f"OCR failed: {job.get('error')}")
                     md_text = ""
-
-        # Action buttons
-        c1, c2 = st.columns([1, 1])
-        with c1:
-            running = (st.session_state.get("ocr_jobs", {}).get(job_id, {}).get("status") == "running")
-            if st.button("Re-OCR this page", disabled=running):
-                invalidate_markdown(key)
-                if job_id in ocr_jobs:
-                    ocr_jobs.pop(job_id, None)
-                ocr_jobs[job_id] = {"status": "running", "cancel": False, "error": None}
-
-                def _redo(pdf: bool, file_bytes: bytes, expect_page: int, expect_file_id: str, this_job_id: str):
-                    try:
-                        if pdf:
-                            pages_md = ocr_pdf_pages_markdown(file_bytes)
-                            pages_len = len(pages_md) or 1
-                            idx = max(1, min(expect_page, pages_len)) - 1
-                            md = pages_md[idx] if pages_md else ""
-                        else:
-                            pages_len = 1
-                            md = ocr_image_markdown(file_bytes)
-                        if ocr_jobs.get(this_job_id, {}).get("cancel"):
-                            ocr_jobs[this_job_id]["status"] = "cancelled"
-                            return
-                        ocr_jobs[this_job_id]["result"] = md
-                        ocr_jobs[this_job_id]["pages"] = pages_len
-                        ocr_jobs[this_job_id]["status"] = "done"
-                    except Exception as e:
-                        ocr_jobs[this_job_id] = {"status": "error", "cancel": False, "error": str(e)}
-
-                ocr_exec.submit(_redo, bool(active_file.is_pdf), active_file.bytes, current_page, file_id, job_id)
-
-        with c2:
-            if st.button("Copy to clipboard"):
-                txt = active_file.raw_edits.get(current_page, md_text or "")
-                if pyperclip is None:
-                    st.warning("Clipboard support unavailable; install pyperclip on the server.")
-                else:
-                    try:
-                        pyperclip.copy(txt)
-                    except Exception as exc:  # pragma: no cover - backend dependent
-                        st.error(f"Clipboard copy failed: {exc}")
-                    else:
-                        st.toast("Copied to clipboard")
 
     # Column 3: Raw Markdown Editor
     with col_raw:

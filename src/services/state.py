@@ -17,12 +17,23 @@ class OcrEntry:
 
 
 @dataclass
+class ExportedItem:
+    """Represents a completed export saved in session history."""
+    id: str
+    name: str
+    format: str  # 'pdf' | 'md'
+    content: bytes
+    created_at: datetime
+
+
+@dataclass
 class Session:
     id: str
     title: str
     files: Dict[str, "SessionFile"] = field(default_factory=dict)
     active_file_id: Optional[str] = None
     ui: Dict[str, Any] = field(default_factory=dict)  # cross-file UI flags
+    exports: Dict[str, "ExportedItem"] = field(default_factory=dict)  # export history
 
 
 @dataclass

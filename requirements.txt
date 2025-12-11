@@ -1,11 +1,14 @@
 streamlit>=1.37.0
 requests>=2.31.0
-weasyprint>=60.0; platform_system != 'Windows'
 markdown>=3.6
 pytest>=7.4.0
 PyPDF2>=3.0.0
 mistralai>=1.2.0
+openai>=1.0.0
 python-dotenv>=1.0.1
 PyMuPDF>=1.24.0
 Pillow>=10.0.0
 pyperclip>=1.8.2
+nbformat>=5.9.0
+nbconvert>=7.0.0
+markdown-pdf>=1.0.0

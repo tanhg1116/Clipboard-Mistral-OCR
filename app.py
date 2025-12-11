@@ -51,12 +51,20 @@ def main() -> None:
     # Sidebar: session list and actions
     active_session_id = render_session_sidebar()
     session: Session = st.session_state["sessions"][active_session_id]
+    
+    # Check if items dialog should be shown
+    from src.ui.session_sidebar import render_items_dialog_if_open
+    sessions = st.session_state["sessions"]
+    
+    # If items dialog is open, show it instead of main content
+    if any(st.session_state.get(f"show_items_dialog_{sid}", False) for sid in sessions):
+        render_items_dialog_if_open(sessions)
+    else:
+        # Session title only (compact)
+        st.markdown(f"## {session.title}")
 
-    # Session title only (compact)
-    st.markdown(f"## {session.title}")
-
-    # Main panes with export button passed down
-    render_main_panes(session, active_session_id, get_executor())
+        # Main panes with export button passed down
+        render_main_panes(session, active_session_id, get_executor())
 
 
 if __name__ == "__main__":

@@ -46,7 +46,7 @@ def render_pdf(file_state: SessionFile) -> None:
         pix = page.get_pixmap(matrix=mat, alpha=False)
         img_bytes = pix.tobytes("png")
 
-        st.image(img_bytes, caption=f"Page {page_num}", use_container_width=True)
+        st.image(img_bytes, caption=f"Page {page_num} of {total}", use_container_width=True)
     except Exception as e:  # pragma: no cover
         st.error(f"Failed to render page: {e}")
     finally:
