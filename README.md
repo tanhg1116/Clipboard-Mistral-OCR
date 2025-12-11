@@ -1,30 +1,66 @@
-# Mistral OCR Quickstart
+# Mistral OCR Application
 
-Struggling because you just screenshotted unselectable text, don’t want to spin up a Python script or burn ChatGPT quota for a quick OCR job? This Streamlit app runs Mistral’s OCR ($1 per 1,000 pages) on PDFs and images fast—upload or paste, edit the markdown, then copy or export it.
+Streamlit app for OCR using Mistral AI. Convert PDFs and images to markdown with LaTeX support, smart exports, and session management.
 
-## Run It
+## Features
+
+- **High-accuracy OCR**: Handles messy fonts, tables, math equations (LaTeX), and code blocks
+- **AI-powered filenames**: OpenAI GPT-4o-mini generates descriptive names from content
+- **Multiple exports**: PDF, HTML (with LaTeX), or Markdown with page range selection
+- **Export history**: View, download, or batch delete exports per session
+- **Session management**: Work on multiple documents with independent caches
+- **Three-column UI**: PDF preview | Rendered markdown | Raw editor
+
+## Setup
 
 ```powershell
+git clone https://github.com/tanhg1116/Clipboard-Mistral-OCR.git
+cd Clipboard-Mistral-OCR
 pip install -r requirements.txt
-copy .env.example .env   # fill in MISTRAL_API_KEY
-# Grab a key from https://admin.mistral.ai/organization/api-keys and paste it into .env
+
+# Add API keys to .env
+copy .env.example .env
+# MISTRAL_API_KEY=your_key_here
+# OPENAI_API_KEY=your_key_here  # Optional
+
 streamlit run app.py
 ```
 
-## Use It
+**API Keys:**
+- [Mistral](https://admin.mistral.ai/organization/api-keys) - Required for OCR
+- [OpenAI](https://platform.openai.com/api-keys) - Optional for smart filenames
 
-1. Drop in a PDF or image, or hit “Paste image from clipboard”.
-2. Switch between uploaded files with the dropdown; each file keeps its own OCR results and edits.
-3. Edit the markdown, copy it with one click, or export selected pages to PDF/Markdown.
-4. Spin up multiple tasks with the session sidebar; exports keep running while you work.
+## Export Formats
 
-### Why Mistral OCR?
-- **High accuracy**: The vision-language model handles messy fonts and mixed layouts better than traditional OCR engines.
-- **Math friendly**: It understands LaTeX-style notation, returning Markdown math blocks instead of mangled symbols.
-- **Structure aware**: Tables, lists, and code snippets come back as well-formed Markdown, preserving the original layout.
+- **PDF**: Direct generation (no LaTeX support)
+- **HTML**: Full LaTeX rendering, print to PDF via browser
+- **Markdown**: Plain text, preserves all formatting
 
-## Tests
+⚠️ **For documents with equations**: Use HTML export, then Print → Save as PDF in browser.
 
-```powershell
-pytest
-```
+## Dependencies
+
+Core: `streamlit`, `mistralai`, `openai`, `python-dotenv`  
+Document: `PyMuPDF`, `PyPDF2`, `Pillow`, `pyperclip`  
+Export: `nbformat`, `nbconvert`, `markdown-pdf`, `markdown`  
+Testing: `pytest`
+
+## Contributing
+
+Contributions welcome! Please:
+1. Open an issue to discuss proposed changes
+2. Fork the repository
+3. Create a feature branch
+4. Submit a pull request with clear description
+
+## Troubleshooting
+
+**PDF export without LaTeX support?** Export as HTML, then Print → Save as PDF in browser.
+
+**Missing API key?** Check `.env` has `MISTRAL_API_KEY=...` (OpenAI key optional)
+
+**Clipboard paste not working?** `pip install Pillow --upgrade`
+
+## License
+
+MIT License
